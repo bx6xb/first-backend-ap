@@ -1,11 +1,12 @@
-import express, { NextFunction, Request, Response } from 'express'
-import { productsRouter } from './routes/productsRouter'
+import express, { NextFunction, Request, Response } from "express"
+import { productsRouter } from "./routes/productsRouter"
+import { runDb } from "./repositories/db"
 
 const app = express()
-const port = 3000
+const port = process.env.PORT || 3000
 
 app.use(express.json()) // to parse request body
-app.use('/products', productsRouter)
+app.use("/products", productsRouter)
 
 // variables
 let requestCount = 0
@@ -13,15 +14,15 @@ let requestCount = 0
 // Middlewares
 const zenowMiddleware = (req: Request, res: Response, next: NextFunction) => {
   // @ts-ignore
-  req.zenow = 'zenow'
-  next() 
+  req.zenow = "zenow"
+  next()
 }
 const authGuardMiddleware = (req: Request, res: Response, next: NextFunction) => {
   // @ts-ignore
-  if (req.query.token === '123') {
-    next() 
+  if (req.query.token === "123") {
+    next()
   } else {
-    res.send(401)
+    res.sendStatus(401)
   }
 }
 const requestCounterMiddleware = (req: Request, res: Response, next: NextFunction) => {
@@ -35,17 +36,22 @@ app.use(authGuardMiddleware)
 app.use(requestCounterMiddleware)
 
 // endpoints
-app.get('/zenow', (req: Request, res: Response) => {
+app.get("/zenow", (req: Request, res: Response) => {
   // @ts-ignore
   const zenow = req.zenow
-  res.send({value: zenow + '!' + ' count ' + requestCount})
+  res.send({ value: zenow + "!" + " count " + requestCount })
 })
-app.get('/users', (req: Request, res: Response) => {
+app.get("/users", (req: Request, res: Response) => {
   // @ts-ignore
   const zenow = req.zenow
-  res.send({value: zenow + ' from users!' + ' count ' + requestCount})
+  res.send({ value: zenow + " from users!" + " count " + requestCount })
 })
 
-app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`)
-})
+const startApp = async () => {
+  await runDb()
+  app.listen(port, () => {
+    console.log(`Example app listening on port ${port}`)
+  })
+}
+
+startApp()
