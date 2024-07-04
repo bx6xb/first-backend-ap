@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response, Router } from "express"
-import { productsRepository } from "../repositories/productsDb"
+import { productsService } from "../domain/productsService"
 import { body } from "express-validator"
 import { inputValidationMiddleware } from "../middlewares/inputValidationMiddleware"
 
@@ -33,12 +33,11 @@ const titleValidation = body("title")
   .withMessage("Title lenght should be from 3 to 10 symbols")
 
 productsRouter.get("/", async (req: Request, res: Response) => {
-  const allProducts = await productsRepository.getAllProducts()
-  console.log("allProducts", allProducts)
+  const allProducts = await productsService.getAllProducts()
   res.send(allProducts)
 })
 productsRouter.get("/:productTitle", inputValidationMiddleware, (req: Request, res: Response) => {
-  const foundProducts = productsRepository.findProductByName(req.params.productTitle)
+  const foundProducts = productsService.findProductByName(req.params.productTitle)
   if (foundProducts) {
     res.send(foundProducts)
   } else {
@@ -46,7 +45,7 @@ productsRouter.get("/:productTitle", inputValidationMiddleware, (req: Request, r
   }
 })
 productsRouter.get("/:id", inputValidationMiddleware, (req: Request, res: Response) => {
-  const product = productsRepository.findProductById(+req.params.id)
+  const product = productsService.findProductById(+req.params.id)
   if (product) {
     res.send(product)
   } else {
@@ -61,12 +60,12 @@ productsRouter.post(
     if (!req.body.title.trim()) {
       res.status(400).send({ message: "Bad request" })
     }
-    const newProduct = await productsRepository.createProduct(req.body.title)
+    const newProduct = await productsService.createProduct(req.body.title)
     res.status(201).send(newProduct)
   }
 )
 productsRouter.delete("/:id", inputValidationMiddleware, async (req: Request, res: Response) => {
-  const isProductDeleted = await productsRepository.deleteProduct(+req.params.id)
+  const isProductDeleted = await productsService.deleteProduct(+req.params.id)
   if (isProductDeleted) {
     res.sendStatus(204)
   } else {
@@ -78,9 +77,9 @@ productsRouter.put(
   titleValidation,
   inputValidationMiddleware,
   async (req: Request, res: Response) => {
-    const isProductUpdated = await productsRepository.updateProduct(+req.params.id, req.body.title)
+    const isProductUpdated = await productsService.updateProduct(+req.params.id, req.body.title)
     if (isProductUpdated) {
-      const product = productsRepository.findProductById(+req.params.id)
+      const product = productsService.findProductById(+req.params.id)
       res.send(product)
     } else {
       res.sendStatus(404)
